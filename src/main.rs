@@ -9,7 +9,7 @@ use person::Person;
 use quay::Quay;
 use transport::Transport;
 
-use draw::{draw_person, draw_quay, draw_transport};
+use draw::Draw;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -28,18 +28,21 @@ fn main() {
         .position_centered()
         .build()
         .unwrap();
-    let mut canvas = window.into_canvas().build().unwrap();
+    let canvas = window.into_canvas().build().unwrap();
 
-    canvas.clear();
-    canvas.present();
-    let mut event_pump = sdl_context.event_pump().unwrap();
+    let mut draw = Draw::new(canvas);
+
+    draw.canvas.clear();
+    draw.canvas.present();
 
     let mut selected_transport = 0;
 
-    'running: loop {
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
+    let mut event_pump = sdl_context.event_pump().unwrap();
 
-        canvas.clear();
+    'running: loop {
+        draw.canvas.set_draw_color(Color::RGB(0, 0, 0));
+
+        draw.canvas.clear();
 
         for event in event_pump.poll_iter() {
             match event {
@@ -84,12 +87,11 @@ fn main() {
             .iter()
             .enumerate()
             .for_each(|(index, person)| {
-                draw_person(&mut canvas, &person, index).unwrap();
+                draw.person(&person, index).unwrap();
             });
 
         for pos in 0..quay.capacity {
-            draw_quay(
-                &mut canvas,
+            draw.quay(
                 if quay.parked.len() > pos {
                     Some(&quay.parked[pos])
                 } else {
@@ -105,7 +107,7 @@ fn main() {
             .iter()
             .enumerate()
             .for_each(|(index, transport)| {
-                draw_transport(&mut canvas, &transport, index).unwrap();
+                draw.transport(&transport, index).unwrap();
             });
 
         //draw_parking_lot(&mut canvas, &generated_parking_lot).unwrap();
@@ -134,7 +136,7 @@ fn main() {
             break;
         }
 
-        canvas.present();
+        draw.canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
